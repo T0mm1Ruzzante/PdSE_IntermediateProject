@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MySimon</string>
+    <string name="delete">Delete</string>
+    <string name="endgame">End Game</string>
+    <string name="clicks">Clicks</string>
+    <string name="sequence">Sequence</string>
 </resources>
