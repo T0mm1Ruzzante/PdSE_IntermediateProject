@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -17,8 +18,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.myapp.mysimon.ui.theme.MySimonTheme
 
@@ -63,41 +66,116 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
     val delete = stringResource(R.string.delete)
     val endgame = stringResource(R.string.endgame)
-    val clicks = stringResource(R.string.clicks)
-    val sequence = stringResource(R.string.sequence)
+    val sequence = stringResource(R.string.new_sequence)
 
     // String with the sequence of actual game
     var t by remember { mutableStateOf(sequence) }
 
     ConstraintLayout(modifier = modifier) {
-        val (space, redBut, greenBut, blueBut, magentaBut, yellowBut, cyanBut, text, deleteBut, endBut) = createRefs()
+        val (spacer, redBut, greenBut, blueBut, magentaBut, yellowBut, cyanBut, sequence, deleteBut, endBut) = createRefs()
 
         // Space on the top
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-
+        Spacer(
+            modifier = Modifier.height(32.dp).constrainAs(spacer) {
+                top.linkTo(parent.top)
+            }
         )
+
+        // Six coloured buttons
+        Button(
+            modifier = Modifier.constrainAs(redBut) {
+                start.linkTo(parent.start, margin = 8.dp)
+                top.linkTo(spacer.bottom)
+                end.linkTo(magentaBut.start, margin = 2.dp)
+            },
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+        ) {}
+        Button(
+            modifier = Modifier.constrainAs(greenBut) {
+                start.linkTo(parent.start, margin = 8.dp)
+                top.linkTo(redBut.bottom, margin = 2.dp)
+                end.linkTo(yellowBut.start, margin = 2.dp)
+            },
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+        ) {}
+        Button(
+            modifier = Modifier.constrainAs(blueBut) {
+                start.linkTo(parent.start, margin = 8.dp)
+                top.linkTo(greenBut.bottom, margin = 2.dp)
+                end.linkTo(cyanBut.start, margin = 2.dp)
+            },
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+        ) {}
+        Button(
+            modifier = Modifier.constrainAs(magentaBut) {
+                end.linkTo(parent.end, margin = 8.dp)
+                top.linkTo(spacer.bottom)
+                start.linkTo(redBut.end, margin = 2.dp)
+                baseline.linkTo(redBut.baseline)
+            },
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Magenta)
+        ) {}
+        Button(
+            modifier = Modifier.constrainAs(yellowBut) {
+                end.linkTo(parent.end, margin = 8.dp)
+                top.linkTo(magentaBut.bottom, margin = 2.dp)
+                start.linkTo(greenBut.end, margin = 2.dp)
+                baseline.linkTo(greenBut.baseline)
+            },
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
+        ) {}
+        Button(
+            modifier = Modifier.constrainAs(cyanBut) {
+                end.linkTo(parent.end, margin = 8.dp)
+                top.linkTo(yellowBut.bottom, margin = 2.dp)
+                start.linkTo(blueBut.end, margin = 2.dp)
+                baseline.linkTo(blueBut.baseline)
+            },
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan)
+        ) {}
+
+        // Text view with the string of the current game
+        Text(
+            text = t,
+            modifier = Modifier.constrainAs(sequence) {
+                start.linkTo(parent.start, margin = 8.dp)
+                end.linkTo(parent.end, margin = 8.dp)
+                top.linkTo(blueBut.bottom, margin = 2.dp)
+            },
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        // Button to delete the current game
+        Button(
+            modifier = Modifier.constrainAs(deleteBut) {
+                start.linkTo(parent.start, margin = 8.dp)
+                end.linkTo(endBut.start, margin = 2.dp)
+                bottom.linkTo(parent.bottom, margin = 24.dp)
+            },
+            onClick = {}
+        ) {
+            Text(text = delete)
+        }
+
+        // Button to end the current game
+        Button(
+            modifier = Modifier.constrainAs(endBut) {
+                start.linkTo(deleteBut.end, margin = 8.dp)
+                end.linkTo(parent.end, margin = 2.dp)
+                bottom.linkTo(parent.bottom, margin = 24.dp)
+            },
+            onClick = buttonAction
+        ) {
+            Text(text = endgame)
+        }
     }
-
-    // Space on the bottom
-    /*Spacer(modifier = Modifier.height(16.dp))
-
-    // Six coloured buttons
-    Button(
-        onClick = {},
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-    ) {}*/
-    /*Button()
-    Button()
-    Button()
-    Button()
-    Button()*/
-
-    // Text view with the string of the current game
-    //Text()
-
-    //
 }
 
 @Preview(showBackground = true)
