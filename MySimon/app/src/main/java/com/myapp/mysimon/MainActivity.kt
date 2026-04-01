@@ -1,13 +1,15 @@
 package com.myapp.mysimon
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -15,8 +17,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,90 +71,173 @@ class MainActivity : ComponentActivity() {
 // Contains colored buttons, current sequence, delete button and end-game button
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
+    // Orientation of the device
+    val orientation = LocalConfiguration.current.orientation
+
+    // Strings used on this activity
     val delete = stringResource(R.string.delete)
     val endgame = stringResource(R.string.endgame)
-    val sequence = stringResource(R.string.new_sequence)
+    val newSequence = stringResource(R.string.new_sequence)
 
-    // String with the sequence of actual game
-    var t by remember { mutableStateOf(sequence) }
+    // String with the sequence of the actual game
+    var t by rememberSaveable { mutableStateOf(newSequence) }
+
+    // Boolean value that identifies if a new game is started
+    var gameStarted = false
 
     ConstraintLayout(modifier = modifier) {
         val (spacer, redBut, greenBut, blueBut, magentaBut, yellowBut, cyanBut, sequence, deleteBut, endBut) = createRefs()
 
-        // Space on the top
-        Spacer(
-            modifier = Modifier.height(32.dp).constrainAs(spacer) {
-                top.linkTo(parent.top)
-            }
-        )
+        // Space on the top if orientation = portrait
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            Spacer(
+                modifier = Modifier
+                    .height(32.dp)
+                    .constrainAs(spacer) {
+                        top.linkTo(parent.top)
+                    }
+            )
+        }
 
         // Six coloured buttons
         Button(
-            modifier = Modifier.constrainAs(redBut) {
-                start.linkTo(parent.start, margin = 8.dp)
-                top.linkTo(spacer.bottom)
-                end.linkTo(magentaBut.start, margin = 2.dp)
+            modifier = Modifier
+                .padding()
+                .size(140.dp)
+                .constrainAs(redBut) {
+                    start.linkTo(parent.start, margin = 8.dp)
+                    top.linkTo(spacer.bottom)
+                    end.linkTo(magentaBut.start)
+                },
+            onClick = {
+                if (!gameStarted) {
+                    t = ""
+                    gameStarted = true
+                }
+                t += "R"
             },
-            onClick = {},
+            shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
         ) {}
         Button(
-            modifier = Modifier.constrainAs(greenBut) {
-                start.linkTo(parent.start, margin = 8.dp)
-                top.linkTo(redBut.bottom, margin = 2.dp)
-                end.linkTo(yellowBut.start, margin = 2.dp)
+            modifier = Modifier
+                .padding()
+                .size(140.dp)
+                .constrainAs(greenBut) {
+                    start.linkTo(parent.start, margin = 8.dp)
+                    top.linkTo(redBut.bottom, margin = 2.dp)
+                    end.linkTo(yellowBut.start)
+                },
+            onClick = {
+                if (!gameStarted) {
+                    t = ""
+                    gameStarted = true
+                }
+                t += "G"
             },
-            onClick = {},
+            shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
         ) {}
         Button(
-            modifier = Modifier.constrainAs(blueBut) {
-                start.linkTo(parent.start, margin = 8.dp)
-                top.linkTo(greenBut.bottom, margin = 2.dp)
-                end.linkTo(cyanBut.start, margin = 2.dp)
+            modifier = Modifier
+                .padding()
+                .size(140.dp)
+                .constrainAs(blueBut) {
+                    start.linkTo(parent.start, margin = 8.dp)
+                    top.linkTo(greenBut.bottom, margin = 2.dp)
+                    end.linkTo(cyanBut.start)
+                },
+            onClick = {
+                if (!gameStarted) {
+                    t = ""
+                    gameStarted = true
+                }
+                t += "B"
             },
-            onClick = {},
+            shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
         ) {}
         Button(
-            modifier = Modifier.constrainAs(magentaBut) {
-                end.linkTo(parent.end, margin = 8.dp)
-                top.linkTo(spacer.bottom)
-                start.linkTo(redBut.end, margin = 2.dp)
-                baseline.linkTo(redBut.baseline)
+            modifier = Modifier
+                .padding()
+                .size(140.dp)
+                .constrainAs(magentaBut) {
+                    end.linkTo(parent.end, margin = 8.dp)
+                    top.linkTo(spacer.bottom)
+                    start.linkTo(redBut.end)
+                    baseline.linkTo(redBut.baseline)
+                },
+            onClick = {
+                if (!gameStarted) {
+                    t = ""
+                    gameStarted = true
+                }
+                t += "M"
             },
-            onClick = {},
+            shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Magenta)
         ) {}
         Button(
-            modifier = Modifier.constrainAs(yellowBut) {
-                end.linkTo(parent.end, margin = 8.dp)
-                top.linkTo(magentaBut.bottom, margin = 2.dp)
-                start.linkTo(greenBut.end, margin = 2.dp)
-                baseline.linkTo(greenBut.baseline)
+            modifier = Modifier
+                .padding()
+                .size(140.dp)
+                .constrainAs(yellowBut) {
+                    end.linkTo(parent.end, margin = 8.dp)
+                    top.linkTo(magentaBut.bottom, margin = 2.dp)
+                    start.linkTo(greenBut.end)
+                    baseline.linkTo(greenBut.baseline)
+                },
+            onClick = {
+                if (!gameStarted) {
+                    t = ""
+                    gameStarted = true
+                }
+                t += "Y"
             },
-            onClick = {},
+            shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
         ) {}
         Button(
-            modifier = Modifier.constrainAs(cyanBut) {
-                end.linkTo(parent.end, margin = 8.dp)
-                top.linkTo(yellowBut.bottom, margin = 2.dp)
-                start.linkTo(blueBut.end, margin = 2.dp)
-                baseline.linkTo(blueBut.baseline)
+            modifier = Modifier
+                .padding()
+                .size(140.dp)
+                .constrainAs(cyanBut) {
+                    end.linkTo(parent.end, margin = 8.dp)
+                    top.linkTo(yellowBut.bottom, margin = 2.dp)
+                    start.linkTo(blueBut.end)
+                    baseline.linkTo(blueBut.baseline)
+                },
+            onClick = {
+                if (!gameStarted) {
+                    t = ""
+                    gameStarted = true
+                }
+                t += "C"
             },
-            onClick = {},
+            shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan)
         ) {}
 
+        // Border color in the text box
+        val gradientBrush = Brush.horizontalGradient(
+            colors = listOf(Color.Red, Color.Green, Color.Blue, Color.Magenta, Color.Yellow, Color.Cyan),
+            startX = 0.0f,
+            endX = 500.0f,
+            tileMode = TileMode.Repeated
+        )
         // Text view with the string of the current game
         Text(
             text = t,
-            modifier = Modifier.constrainAs(sequence) {
-                start.linkTo(parent.start, margin = 8.dp)
-                end.linkTo(parent.end, margin = 8.dp)
-                top.linkTo(blueBut.bottom, margin = 2.dp)
-            },
+            modifier = Modifier
+                .border(width = 2.dp, brush = gradientBrush, shape = RectangleShape)
+                .padding(10.dp)
+                .constrainAs(sequence) {
+                    start.linkTo(parent.start, margin = 8.dp)
+                    end.linkTo(parent.end, margin = 8.dp)
+                    top.linkTo(blueBut.bottom, margin = 2.dp)
+                    bottom.linkTo(deleteBut.top)
+                    bottom.linkTo(endBut.top)
+                },
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium
         )
@@ -159,7 +249,10 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
                 end.linkTo(endBut.start, margin = 2.dp)
                 bottom.linkTo(parent.bottom, margin = 24.dp)
             },
-            onClick = {}
+            onClick = {
+                gameStarted = false
+                t = newSequence
+            }
         ) {
             Text(text = delete)
         }
@@ -171,7 +264,11 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
                 end.linkTo(parent.end, margin = 2.dp)
                 bottom.linkTo(parent.bottom, margin = 24.dp)
             },
-            onClick = buttonAction
+            onClick = {
+                gameStarted = false
+                t = newSequence
+                buttonAction()
+            }
         ) {
             Text(text = endgame)
         }

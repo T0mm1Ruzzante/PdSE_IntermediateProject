@@ -47,7 +47,11 @@ class EndgameActivity : ComponentActivity() {
 @Composable
 fun EndScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
     ConstraintLayout(modifier = Modifier) {
-        Button(onClick = buttonAction) {}
+        Button(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(),
+            onClick = buttonAction) {}
     }
 }
 
