@@ -31,11 +31,7 @@ class EndgameActivity : ComponentActivity() {
                     EndScreen(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
-                        buttonAction = {
-                            // End the current activity and return to MainActivity
-                            this.finish()
-                        }
+                            .padding(innerPadding)
                     )
                 }
             }
@@ -43,19 +39,16 @@ class EndgameActivity : ComponentActivity() {
     }
 }
 
-// Function of the first screen of the app
-// Contains colored buttons, current sequence, delete button and end-game button
+// Function of the second screen of the app
+// Contain the sequences of the previous games and how many times buttons were clicked in each sequence
 @Composable
-fun EndScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
+fun EndScreen(modifier: Modifier = Modifier) {
     ConstraintLayout(modifier = Modifier) {
-        Button(
-            modifier = Modifier,
-            onClick = buttonAction) {}
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun EndScreenPreview() {
-    EndScreen( buttonAction = {} )
+    EndScreen()
 }

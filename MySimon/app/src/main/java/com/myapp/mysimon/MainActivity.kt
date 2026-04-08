@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Brush
@@ -42,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.myapp.mysimon.ui.theme.MySimonTheme
+import com.myapp.mysimon.ui.theme.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +87,12 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
     // Orientation of the device
     val orientation = LocalConfiguration.current.orientation
 
+    // Value used to proportion items to the screen
+    val configuration = LocalConfiguration.current
+
+    // Value used to make the sequence scrollable and not expandable
+    val scrollState = rememberScrollState()
+
     // Strings used on this activity
     val delete = stringResource(R.string.delete)
     val endgame = stringResource(R.string.endgame)
@@ -95,28 +102,25 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
     var t by rememberSaveable { mutableStateOf(newSequence) }
 
     // Boolean value that identifies if a new game is started
-    var gameStarted = false
+    var gameStarted by rememberSaveable { mutableStateOf(false) }
 
-    // Value used to make the sequence scrollable and not expandable
-    val scrollState = rememberScrollState()
+    // Value used to count the actual clicks on buttons
+    var count by rememberSaveable { mutableIntStateOf(0) }
 
-    // Value used to proportion items to the screen
-    val configuration = LocalConfiguration.current
+    // List of the previous sequences in the current game
+    // var list by rememberSaveable {mutableStateOf(listOf<String>()}
+
+    // Border color in the text box containing the sequence
+    val gradientBrush = Brush.horizontalGradient(
+        colors = listOf(Color.Red, Color.Magenta, Color.Green, Color.Yellow, Color.Blue, Color.Cyan),
+        startX = 0.0f,
+        endX = 500.0f,
+        tileMode = TileMode.Repeated
+    )
 
     // Layout of the game activity
     ConstraintLayout(modifier = modifier) {
-        val (spacer, matrix, sequence, deleteBut, endBut) = createRefs()
-
-        // Space on the top if orientation = portrait
-        /*if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            Spacer(
-                modifier = Modifier
-                    .height(20.dp)
-                    .constrainAs(spacer) {
-                        top.linkTo(parent.top)
-                    }
-            )
-        }*/
+        val (matrix, sequence, deleteBut, endBut) = createRefs()
 
         // Column that contain the 3x2 matrix with the 6 buttons
         // It always cover half of the screen
@@ -124,14 +128,13 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
             .padding(8.dp)
             .constrainAs(matrix) {
                 start.linkTo(parent.start)
+                top.linkTo(parent.top)
                 if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    top.linkTo(spacer.bottom)
                     end.linkTo(parent.end)
                     bottom.linkTo(sequence.top)
                     width = Dimension.value(configuration.screenWidthDp.dp)
                     height= Dimension.value((configuration.screenHeightDp / 2).dp)
                 } else {
-                    top.linkTo(parent.top)
                     end.linkTo(sequence.start)
                     bottom.linkTo(parent.bottom)
                     width = Dimension.value((configuration.screenWidthDp / 2).dp)
@@ -155,6 +158,7 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     repeat(2) {
+                        val i = index
                         Button(
                             modifier = Modifier
                                 .weight(1f)
@@ -163,8 +167,11 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
                                 if (!gameStarted) {
                                     t = ""
                                     gameStarted = true
+                                } else {
+                                    t += ", "
                                 }
-                                t = t + ", " + colorsLetters[index]
+                                t += colorsLetters[i]
+                                count++
                             },
                             shape = RoundedCornerShape(4.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colors[index])
@@ -175,14 +182,6 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
             }
         }
 
-        // Border color in the text box
-        val gradientBrush = Brush.horizontalGradient(
-            colors = listOf(Color.Red, Color.Magenta, Color.Green, Color.Yellow, Color.Blue, Color.Cyan),
-            startX = 0.0f,
-            endX = 500.0f,
-            tileMode = TileMode.Repeated
-        )
-
         // Text view with the string of the current game
         Text(
             text = t,
@@ -192,12 +191,14 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
                 .border(width = 2.dp, brush = gradientBrush, shape = RectangleShape)
                 .constrainAs(sequence) {
                     end.linkTo(parent.end, margin = 8.dp)
+                    bottom.linkTo(deleteBut.top)
                     if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                        start.linkTo(parent.start, margin = 8.dp)
-                        top.linkTo(matrix.bottom, margin = 2.dp)
+                        start.linkTo(parent.start)
+                        top.linkTo(matrix.bottom)
+                        bottom.linkTo(endBut.top)
                     } else {
-                        start.linkTo(matrix.end, margin = 8.dp)
-                        top.linkTo(parent.top, margin = 24.dp)
+                        start.linkTo(matrix.end)
+                        top.linkTo(parent.top)
                     }
                 },
             fontSize = 21.sp,
@@ -206,45 +207,55 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : () -> Unit) {
 
         // Button to delete the current game
         Button(
-            modifier = Modifier.constrainAs(deleteBut) {
-                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    start.linkTo(parent.start, margin = 8.dp)
-                    end.linkTo(endBut.start, margin = 2.dp)
-                    bottom.linkTo(parent.bottom, margin = 24.dp)
-                } else {
-                    start.linkTo(matrix.end, margin = 8.dp)
-                    end.linkTo(parent.end, margin = 8.dp)
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(deleteBut) {
                     top.linkTo(sequence.bottom)
-                    bottom.linkTo(endBut.top, margin = 4.dp)
-                }
+                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        start.linkTo(parent.start)
+                        end.linkTo(endBut.start)
+                        bottom.linkTo(parent.bottom)
+                    } else {
+                        start.linkTo(matrix.end)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(endBut.top)
+                    }
             },
             onClick = {
                 gameStarted = false
                 t = newSequence
-            }
+                count = 0
+            },
+            shape = RoundedCornerShape(4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
         ) {
             Text(text = delete)
         }
 
         // Button to end the current game
         Button(
-            modifier = Modifier.constrainAs(endBut) {
-                bottom.linkTo(parent.bottom, margin = 24.dp)
-                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    start.linkTo(deleteBut.end, margin = 8.dp)
-                    end.linkTo(parent.end, margin = 2.dp)
-                    bottom.linkTo(parent.bottom, margin = 24.dp)
-                } else {
-                    start.linkTo(matrix.end, margin = 8.dp)
-                    end.linkTo(parent.end, margin = 8.dp)
-                    top.linkTo(deleteBut.bottom, margin = 4.dp)
-                }
-            },
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(endBut) {
+                    bottom.linkTo(parent.bottom)
+                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        start.linkTo(deleteBut.end)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom)
+                    } else {
+                        start.linkTo(matrix.end)
+                        end.linkTo(parent.end)
+                        top.linkTo(deleteBut.bottom)
+                    }
+                },
             onClick = {
                 gameStarted = false
                 t = newSequence
+                count = 0
                 buttonAction()
-            }
+            },
+            shape = RoundedCornerShape(4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
         ) {
             Text(text = endgame)
         }
