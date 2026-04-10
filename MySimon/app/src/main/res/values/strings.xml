@@ -2,7 +2,6 @@
     <string name="app_name">MySimon</string>
     <string name="delete">Delete</string>
     <string name="endgame">End Game</string>
-    <string name="clicks" translatable="false">Clicks</string>
     <string name="new_sequence">Start New Game</string>
     <string name="prev_sequence">All Games</string>
 </resources>
