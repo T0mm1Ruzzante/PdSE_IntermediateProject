@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myapp.mysimon.ui.theme.*
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,9 +119,11 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : (List<String>, List
 
     // Function used to end the current game and go to the second activity
     val onEndgameButtonClick: () -> Unit = {
-        // Insert the string and the counter in the lists
-        if (!gameStarted)
+        // Set the sequence to a void string if this game has no button pressed
+        if (!gameStarted) {
             t = ""
+        }
+        // Insert the string and the counter in the lists
         sequenceList += t
         counterList += count
         // Reset the game
@@ -132,7 +135,7 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : (List<String>, List
     }
 
     // Layout of the game activity
-    if( orientation == Configuration.ORIENTATION_PORTRAIT) {
+    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
         // Layout for the portrait mode
         Column(
             modifier = modifier
@@ -174,7 +177,6 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : (List<String>, List
                     onButtonClick = onEndgameButtonClick
                 )
             }
-
         }
     } else {
         // Layout for the landscape mode
@@ -225,9 +227,10 @@ fun MainScreen(modifier: Modifier = Modifier, buttonAction : (List<String>, List
             }
         }
     }
-
 }
 
+// Composable function that define the 3x2 matrix of colored buttons
+// In the parameters is passed the function called when a button is clicked
 @Composable
 fun ButtonGrid(modifier: Modifier = Modifier, onButtonClick: (String) -> Unit) {
     // All button colors and their respective initial letters
@@ -268,12 +271,14 @@ fun ButtonGrid(modifier: Modifier = Modifier, onButtonClick: (String) -> Unit) {
     }
 }
 
+// Composable function that display the sequence of the current game
+// If the sequence is too long for its box, it will be scrollable
 @Composable
 fun SequenceText(modifier: Modifier = Modifier, sequence: String) {
     // Value used to make the sequence scrollable and not expandable
     val scrollState = rememberScrollState()
 
-    // Gradient border color for the text box containing the sequence
+    // Gradient border color for the text box
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(Color.Red, Color.Magenta, Color.Green, Color.Yellow, Color.Blue, Color.Cyan),
         startX = 0.0f,
@@ -296,6 +301,8 @@ fun SequenceText(modifier: Modifier = Modifier, sequence: String) {
     )
 }
 
+// Composable function that define the menu button Delete
+// In the parameters is passed the function called when the button is clicked
 @Composable
 fun DeleteButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
     // String of the button
@@ -315,6 +322,8 @@ fun DeleteButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
     }
 }
 
+// Composable function that define the menu button End Game
+// In the parameters is passed the function called when the button is clicked
 @Composable
 fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
     // String of the button

@@ -43,7 +43,7 @@ class EndgameActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        // Get the arrays from the first activity and pass them to the second activity
+                        // Get the arrays from the first activity to use them in the second activity
                         sequenceList = intent.getStringArrayExtra("sequenceList") ?: Array(0) {""},
                         counterList = intent.getIntArrayExtra("counterList") ?: IntArray(0)
                     )
@@ -55,6 +55,7 @@ class EndgameActivity : ComponentActivity() {
 
 // Function of the second screen of the app
 // Contain the sequences of the previous games and how many times buttons were clicked in each sequence
+// Receive the arrays of the first activity as parameters to display the previous games
 @Composable
 fun EndScreen(modifier: Modifier = Modifier, sequenceList: Array<String>, counterList: IntArray) {
     // String used on this activity
@@ -65,14 +66,15 @@ fun EndScreen(modifier: Modifier = Modifier, sequenceList: Array<String>, counte
         return
     }
 
-    // Layout of the endgame activity
+    // The layout of the endgame activity is contained in a column in portrait and landscape too
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // On top of the layout there is a text with the "title" of the activity
+        // On top of the layout there is a text with the "title" of the screen
         // This text will not scroll up or down with the lazy column
+        // The color of the text is changed depending on the current theme of the device
         Text(
             text = allSequences,
             modifier = Modifier
@@ -84,6 +86,7 @@ fun EndScreen(modifier: Modifier = Modifier, sequenceList: Array<String>, counte
             textAlign = TextAlign.Center
         )
 
+        // Under the text, covering the rest of the screen, there is a lazy column
         // The lazy column contains the sequences and it's scrollable
         LazyColumn(
             modifier = Modifier
@@ -124,7 +127,6 @@ fun EndScreen(modifier: Modifier = Modifier, sequenceList: Array<String>, counte
             }
         }
     }
-
 }
 
 @Preview(showBackground = true)
