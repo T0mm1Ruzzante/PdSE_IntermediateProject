@@ -1,6 +1,7 @@
 package com.myapp.mysimon
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,6 +37,17 @@ class EndgameActivity : ComponentActivity() {
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
+        // Get the arrays from the first activity to use them in the current activity
+        val sequenceList = intent.getStringArrayExtra("sequenceList") ?: Array(0) {""}
+        val counterList = intent.getIntArrayExtra("counterList") ?: IntArray(0)
+
+        // Check if the arrays have the same size, and close the activity if not
+        if (sequenceList.size != counterList.size) {
+            Log.e("EndScreen", "Data mismatch: sequenceList size ${sequenceList.size} does not match counterList size ${counterList.size}")
+            this.finish()
+            return
+        }
+
         // Set and display the UI content
         setContent {
             MySimonTheme {
@@ -43,9 +56,8 @@ class EndgameActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        // Get the arrays from the first activity to use them in the second activity
-                        sequenceList = intent.getStringArrayExtra("sequenceList") ?: Array(0) {""},
-                        counterList = intent.getIntArrayExtra("counterList") ?: IntArray(0)
+                        sequenceList = sequenceList,
+                        counterList = counterList
                     )
                 }
             }
@@ -60,11 +72,6 @@ class EndgameActivity : ComponentActivity() {
 fun EndScreen(modifier: Modifier = Modifier, sequenceList: Array<String>, counterList: IntArray) {
     // String used on this activity
     val allSequences = stringResource(R.string.all_sequences)
-
-    // Check if the arrays have the same size, and close the activity if not
-    if (sequenceList.size != counterList.size) {
-        return
-    }
 
     // The layout of the endgame activity is contained in a column in portrait and landscape too
     Column(
@@ -121,6 +128,7 @@ fun EndScreen(modifier: Modifier = Modifier, sequenceList: Array<String>, counte
                         color = Color.Black,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
+                        overflow = TextOverflow.Ellipsis,
                         maxLines = 4
                     )
                 }
