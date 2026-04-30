@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MySimon</string>
-    <string name="delete">Delete</string>
+    <string name="game_title" translatable="false">MySimon Game</string>
+    <string name="old_games">Old games</string>
+    <string name="new_game">New Game</string>
+    <string name="pause">Pause</string>
     <string name="endgame">End Game</string>
     <string name="new_sequence">Start New Game</string>
-    <string name="all_sequences">All Games</string>
+    <string name="game_details">Game Details</string>
 </resources>

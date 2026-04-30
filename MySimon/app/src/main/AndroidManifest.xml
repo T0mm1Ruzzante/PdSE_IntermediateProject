@@ -21,7 +21,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".EndgameActivity">
+            android:name=".GameActivity">
+        </activity>
+        <activity
+            android:name=".DetailActivity">
         </activity>
     </application>
 
