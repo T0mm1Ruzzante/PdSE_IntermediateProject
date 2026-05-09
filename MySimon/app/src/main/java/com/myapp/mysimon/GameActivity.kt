@@ -3,6 +3,7 @@ package com.myapp.mysimon
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -43,15 +44,20 @@ import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
 
 class GameActivity : ComponentActivity() {
+
+    private val mTag = this.javaClass.simpleName
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
+        Log.d(mTag, "Sto per accedere al database")
         // Get the database instance and the data access object
         val db = AppDatabase.getDatabase(this)
         val gameDao = db.gameDao()
+        Log.d(mTag, "Ho l'interfaccia del database")
 
         // Set and display the UI content
         setContent {
@@ -61,9 +67,11 @@ class GameActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        buttonAction = { counter, sequence ->
+                        buttonAction = { game ->
+                            Log.d(mTag, "Sto per inserire il game nel database")
                             // The argument passed values are inserted into the database
-                            gameDao.insert(Game(counter = counter, sequence = sequence))
+                            gameDao.insert(game)
+                            Log.d(mTag, "Ho inserito il game nel database")
 
                             // Close the activity and return to the first activity
                             this.finish()
@@ -78,7 +86,7 @@ class GameActivity : ComponentActivity() {
 // Function of the first screen of the app
 // Contains colored buttons, current sequence, delete button and end-game button
 @Composable
-fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Int, String) -> Unit) {
+fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
     // Orientation of the device
     val orientation = LocalConfiguration.current.orientation
 
@@ -120,12 +128,14 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Int, String) -> Un
         if (!gameStarted) {
             t = ""
         }
+        // Crete the game that has to be inserted in the database
+        val game = Game(counter = count, sequence = t)
         // Reset the game
         gameStarted = false
         t = newSequence
         count = 0
         // Insert the values in the database and return to the first activity
-        buttonAction(count, t)
+        buttonAction(game)
     }
 
     // Layout of the game activity
@@ -371,5 +381,5 @@ fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-    GameScreen( buttonAction = { _, _ -> } )
+    GameScreen( buttonAction = {} )
 }

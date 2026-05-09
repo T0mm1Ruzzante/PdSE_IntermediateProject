@@ -43,15 +43,20 @@ import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
 
 class MainActivity : ComponentActivity() {
+
+    private val mTag = this.javaClass.simpleName
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
+        Log.d(mTag, "Sto per accedere al database")
         // Get the database instance and the data access object
         val db = AppDatabase.getDatabase(this)
         val gameDao = db.gameDao()
+        Log.d(mTag, "Ho l'interfaccia del database")
 
         // Set and display the UI content
         setContent {
