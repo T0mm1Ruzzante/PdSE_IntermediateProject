@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
                         })
                     }
                 ) { innerPadding ->
+                    val gamesList by gameDao.getAll().collectAsState(initial = emptyList())
                     MainScreen(
                         modifier = Modifier
                             .fillMaxSize()
@@ -82,7 +83,7 @@ class MainActivity : ComponentActivity() {
                             }
                             startActivity(intent)
                         },
-                        games = gameDao.getAll()
+                        games = gamesList
                     )
                 }
             }
@@ -119,7 +120,7 @@ fun MainScreen(modifier: Modifier = Modifier, buttonDetailScreen : (game: Game) 
             textAlign = TextAlign.Center
         )
 
-        //
+        // Title of the section containing the old games
         Text(
             text = oldGames,
             modifier = Modifier

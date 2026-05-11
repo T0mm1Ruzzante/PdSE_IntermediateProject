@@ -40,8 +40,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
+import kotlinx.coroutines.launch
 
 class GameActivity : ComponentActivity() {
 
@@ -68,13 +70,16 @@ class GameActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding),
                         buttonAction = { game ->
-                            Log.d(mTag, "Sto per inserire il game nel database")
-                            // The argument passed values are inserted into the database
-                            gameDao.insert(game)
-                            Log.d(mTag, "Ho inserito il game nel database")
+                            // The access to the database is made into a coroutine
+                            lifecycleScope.launch {
+                                Log.d(mTag, "Sto per inserire il game nel database")
+                                // The argument passed values are inserted into the database
+                                gameDao.insert(game)
+                                Log.d(mTag, "Ho inserito il game nel database")
 
-                            // Close the activity and return to the first activity
-                            this.finish()
+                                // Close the activity and return to the first activity
+                                finish()
+                            }
                         }
                     )
                 }

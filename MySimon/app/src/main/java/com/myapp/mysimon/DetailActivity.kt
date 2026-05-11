@@ -1,6 +1,7 @@
 package com.myapp.mysimon
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -34,10 +35,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
+import kotlinx.coroutines.launch
 
 class DetailActivity : ComponentActivity() {
+
+    private val mTag = this.javaClass.simpleName
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -51,15 +57,26 @@ class DetailActivity : ComponentActivity() {
         // Get the id of the game from the intent
         val id = intent.getIntExtra("gameID", 0)
 
+        var thisGame = Game(counter = 0, sequence = "")
+
+
+        // The access to the database is made into a coroutine
+        lifecycleScope.launch {
+            Log.d(mTag, "Cerco il game nel database")
+            thisGame = gameDao.selectById(id)
+            Log.d(mTag, "Ho trovato il game")
+        }
+
         // Set and display the UI content
         setContent {
             MySimonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+
                     DetailScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        game = gameDao.selectById(id)
+                            game = thisGame
                     )
                 }
             }
