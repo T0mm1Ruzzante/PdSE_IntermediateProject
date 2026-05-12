@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
                             }
                             startActivity(intent)
                         },
-                        games = gamesList
+                        games = gamesList.reversed() // The list is reversed to show the most recent games first
                     )
                 }
             }
@@ -91,9 +91,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Function of the second screen of the app
+// Function of the first screen of the app
 // Contain the sequences of the previous games and how many times buttons were clicked in each sequence
-// Receive the arrays of the first activity as parameters to display the previous games
+// From this screen you can open the game activity or access the details of a sequence
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, buttonDetailScreen : (game: Game) -> Unit, games: List<Game>) {
     // String used on this activity

@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -38,7 +39,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class DetailActivity : ComponentActivity() {
 
@@ -57,33 +60,35 @@ class DetailActivity : ComponentActivity() {
         // Get the id of the game from the intent
         val id = intent.getIntExtra("gameID", 0)
 
-        var thisGame = Game(counter = 0, sequence = "")
-
-
-        // The access to the database is made into a coroutine
-        lifecycleScope.launch {
-            Log.d(mTag, "Cerco il game nel database")
-            thisGame = gameDao.selectById(id)
-            Log.d(mTag, "Ho trovato il game")
-        }
-
         // Set and display the UI content
         setContent {
             MySimonTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                // Define the default value of the game we want to display
+                var game by rememberSaveable { mutableStateOf<Game?>(null) }
 
-                    DetailScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
+                // Start a coroutine to search the game in the database
+                LaunchedEffect(id) {
+                    game = gameDao.selectById(id)
+                }
+
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    // Wait the finish of the coroutine to pass the game to the screen function
+                    game?.let { thisGame ->
+                        DetailScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
                             game = thisGame
-                    )
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+// Function of the detail screen of the app
+// Contain details about a sequence
 @Composable
 fun DetailScreen(modifier: Modifier = Modifier, game: Game) {
     // String used on this activity

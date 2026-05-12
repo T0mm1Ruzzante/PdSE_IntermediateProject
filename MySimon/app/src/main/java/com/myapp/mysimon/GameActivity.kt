@@ -88,8 +88,8 @@ class GameActivity : ComponentActivity() {
     }
 }
 
-// Function of the first screen of the app
-// Contains colored buttons, current sequence, delete button and end-game button
+// Function of the game screen of the app
+// Contains colored buttons, current sequence and the menu buttons
 @Composable
 fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
     // Orientation of the device
