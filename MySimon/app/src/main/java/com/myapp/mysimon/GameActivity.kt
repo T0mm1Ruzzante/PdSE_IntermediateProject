@@ -1,6 +1,5 @@
 package com.myapp.mysimon
 
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -177,19 +177,25 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = {t = "palle"}
+                    onButtonClick = {
+                        t = "palle"
+                        gameStarted = true
+                    },
+                    clickable = !gameStarted
                 )
                 PauseButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = onPauseButtonClick
+                    onButtonClick = onPauseButtonClick,
+                    clickable = gameStarted
                 )
                 EndgameButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = onEndgameButtonClick
+                    onButtonClick = onEndgameButtonClick,
+                    clickable = gameStarted
                 )
             }
         }
@@ -229,19 +235,24 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = {}
+                    onButtonClick = {
+                        gameStarted = true
+                    },
+                    clickable = !gameStarted
                 )
                 PauseButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = onPauseButtonClick
+                    onButtonClick = onPauseButtonClick,
+                    clickable = gameStarted
                 )
                 EndgameButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = onEndgameButtonClick
+                    onButtonClick = onEndgameButtonClick,
+                    clickable = gameStarted
                 )
             }
         }
@@ -323,7 +334,7 @@ fun SequenceText(modifier: Modifier = Modifier, sequence: String) {
 // Composable function that define the button Start, used to start a new game
 // In the parameters is passed the function called when the button is clicked
 @Composable
-fun StartButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
+fun StartButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clickable: Boolean) {
     // String of the button
     val start = stringResource(R.string.new_game)
 
@@ -344,7 +355,7 @@ fun StartButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
 // Composable function that define the button Pause, used to pause the sequence the app is generating
 // In the parameters is passed the function called when the button is clicked
 @Composable
-fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
+fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clickable: Boolean) {
     // String of the button
     val pause = stringResource(R.string.pause)
 
@@ -365,7 +376,7 @@ fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
 // Composable function that define the button End Game, used to end the current game
 // In the parameters is passed the function called when the button is clicked
 @Composable
-fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
+fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clickable: Boolean) {
     // String of the button
     val endgame = stringResource(R.string.endgame)
 

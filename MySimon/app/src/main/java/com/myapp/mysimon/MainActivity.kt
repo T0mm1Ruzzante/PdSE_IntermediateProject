@@ -163,18 +163,19 @@ fun MainScreen(modifier: Modifier = Modifier, buttonDetailScreen : (game: Game) 
                     )
 
                     // Sequence of that game divided in green part and red part
+                    val errorSplitIndex = (3 * (games[index].error - 1)).coerceIn(0, games[index].sequence.length)
                     val resultString = buildAnnotatedString {
                         append(games[index].sequence)
                         // Add the green color to the correct part
                         addStyle(
                             style = SpanStyle(Color.Green),
                             start = 0,
-                            end = 3*(games[index].error - 1)
+                            end = errorSplitIndex
                         )
                         // Add the red color to the wrong part
                         addStyle(
                             style = SpanStyle(Color.Red),
-                            start = 3*(games[index].error - 1),
+                            start = errorSplitIndex,
                             end = games[index].sequence.length
                         )
                     }
