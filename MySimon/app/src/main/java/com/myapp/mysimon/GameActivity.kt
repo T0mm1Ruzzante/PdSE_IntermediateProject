@@ -24,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
@@ -47,6 +49,7 @@ import kotlinx.coroutines.launch
 
 class GameActivity : ComponentActivity() {
 
+    private lateinit var gameViewModel: GameViewModel
     private val mTag = this.javaClass.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,11 +58,8 @@ class GameActivity : ComponentActivity() {
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
-        Log.d(mTag, "Sto per accedere al database")
-        // Get the database instance and the data access object
-        val db = AppDatabase.getDatabase(this)
-        val gameDao = db.gameDao()
-        Log.d(mTag, "Ho l'interfaccia del database")
+        // Get a new or existing ViewModel from the ViewModelProvider
+        gameViewModel = ViewModelProvider(this)[GameViewModel::class.java]
 
         // Set and display the UI content
         setContent {
@@ -69,18 +69,7 @@ class GameActivity : ComponentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
-                        buttonAction = { game ->
-                            // The access to the database is made into a coroutine
-                            lifecycleScope.launch {
-                                Log.d(mTag, "Sto per inserire il game nel database")
-                                // The argument passed values are inserted into the database
-                                gameDao.insert(game)
-                                Log.d(mTag, "Ho inserito il game nel database")
-
-                                // Close the activity and return to the first activity
-                                finish()
-                            }
-                        }
+                        viewModel = gameViewModel
                     )
                 }
             }
@@ -91,56 +80,41 @@ class GameActivity : ComponentActivity() {
 // Function of the game screen of the app
 // Contains colored buttons, current sequence and the menu buttons
 @Composable
-fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
+fun GameScreen(modifier: Modifier = Modifier, viewModel: GameViewModel) {
     // Orientation of the device
     val orientation = LocalConfiguration.current.orientation
 
+    // Actual state of the game
+    val gameState by viewModel.gameState.collectAsState()
+
     // String with the sequence of the actual game
     val newSequence = stringResource(R.string.new_sequence)
-    var t by rememberSaveable { mutableStateOf(newSequence) }
-
-    // Boolean value that identifies if a new game is started
-    var gameStarted by rememberSaveable { mutableStateOf(false) }
+    val text by viewModel.sequenceString.collectAsState()
 
     // Value used to count the actual clicks on buttons
     var count by rememberSaveable { mutableIntStateOf(0) }
 
     // Function used to add the letter of the clicked button to the sequence
     val onColoredButtonCLick: (String) -> Unit = { color->
-        // If this button start a new game: reset the sequence, else add the comma before the new letter
-        if (!gameStarted) {
-            t = ""
-            gameStarted = true
-        } else {
-            t += ", "
-        }
-        // Add the letter to the sequence and increase the counter
-        t += color
-        count++
+
     }
 
-    // Function used to delete the current game and restart a new one
+    val onStartButtonClick: () -> Unit = {
+        viewModel.startNewGame()
+    }
+
+    // Function used to pause (or resume if already paused) the current game
     val onPauseButtonClick: () -> Unit = {
-        // Reset the current game
-        gameStarted = false
-        t = newSequence
-        count = 0
+        if (gameState == GameState.PAUSE) {
+            viewModel.resumeGame()
+        } else {
+            viewModel.pauseGame()
+        }
     }
 
-    // Function used to end the current game and go to the second activity
+    // Function used to end the current game and return to the first activity
     val onEndgameButtonClick: () -> Unit = {
-        // Set the sequence to a void string if this game has no button pressed
-        if (!gameStarted) {
-            t = ""
-        }
-        // Crete the game that has to be inserted in the database
-        val game = Game(counter = count, sequence = t, error = 0)
-        // Reset the game
-        gameStarted = false
-        t = newSequence
-        count = 0
-        // Insert the values in the database and return to the first activity
-        buttonAction(game)
+        viewModel.endGame()
     }
 
     // Layout of the game activity
@@ -164,7 +138,7 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
             SequenceText(
                 modifier = Modifier
                     .weight(2f),
-                sequence = t
+                sequence = if (gameState == GameState.STARTING) newSequence else text
             )
 
             // On the bottom there is a row with the three game buttons, covering the last 1/7 of space
@@ -177,25 +151,21 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = {
-                        t = "palle"
-                        gameStarted = true
-                    },
-                    clickable = !gameStarted
+                    onButtonClick = onPauseButtonClick,
+                    clickable = gameState == GameState.STARTING
                 )
                 PauseButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
                     onButtonClick = onPauseButtonClick,
-                    clickable = gameStarted
+                    gameState = gameState
                 )
                 EndgameButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = onEndgameButtonClick,
-                    clickable = gameStarted
+                    onButtonClick = onEndgameButtonClick
                 )
             }
         }
@@ -227,7 +197,7 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
                 SequenceText(
                     modifier = Modifier
                         .weight(2f),
-                    sequence = t
+                    sequence = if (gameState == GameState.STARTING) newSequence else text
                 )
 
                 // Under the sequence there are the three button
@@ -235,24 +205,21 @@ fun GameScreen(modifier: Modifier = Modifier, buttonAction : (Game) -> Unit) {
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = {
-                        gameStarted = true
-                    },
-                    clickable = !gameStarted
+                    onButtonClick = onStartButtonClick,
+                    clickable = gameState == GameState.STARTING
                 )
                 PauseButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
                     onButtonClick = onPauseButtonClick,
-                    clickable = gameStarted
+                    gameState = gameState
                 )
                 EndgameButton(
                     modifier = Modifier
                         .fillMaxHeight()
                         .weight(1f),
-                    onButtonClick = onEndgameButtonClick,
-                    clickable = gameStarted
+                    onButtonClick = onEndgameButtonClick
                 )
             }
         }
@@ -343,6 +310,7 @@ fun StartButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clicka
         modifier = modifier
             .padding(8.dp),
         onClick = onButtonClick,
+        enabled = clickable,
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
     ) {
         Text(
@@ -355,9 +323,10 @@ fun StartButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clicka
 // Composable function that define the button Pause, used to pause the sequence the app is generating
 // In the parameters is passed the function called when the button is clicked
 @Composable
-fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clickable: Boolean) {
-    // String of the button
+fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, gameState: GameState) {
+    // Strings of the button
     val pause = stringResource(R.string.pause)
+    val resume = stringResource(R.string.resume)
 
     // Button to pause the current game
     Button(
@@ -367,7 +336,8 @@ fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clicka
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
     ) {
         Text(
-            text = pause,
+            // The text change depending on the state of the game
+            text = if (gameState == GameState.PAUSE) resume else pause,
             fontSize = 16.sp
         )
     }
@@ -376,7 +346,7 @@ fun PauseButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clicka
 // Composable function that define the button End Game, used to end the current game
 // In the parameters is passed the function called when the button is clicked
 @Composable
-fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clickable: Boolean) {
+fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit) {
     // String of the button
     val endgame = stringResource(R.string.endgame)
 
@@ -393,9 +363,9 @@ fun EndgameButton(modifier: Modifier = Modifier, onButtonClick: () -> Unit, clic
         )
     }
 }
-
+/*
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-    GameScreen( buttonAction = {} )
-}
+    GameScreen()
+}*/

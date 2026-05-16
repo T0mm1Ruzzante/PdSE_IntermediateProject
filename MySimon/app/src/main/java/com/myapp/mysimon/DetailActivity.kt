@@ -41,9 +41,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.myapp.mysimon.data.*
 import com.myapp.mysimon.ui.theme.*
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 class DetailActivity : ComponentActivity() {
 
@@ -55,7 +52,7 @@ class DetailActivity : ComponentActivity() {
 
         // Get the database instance and the data access object
         val db = AppDatabase.getDatabase(this)
-        val gameDao = db.gameDao()
+        val repository = GameRepository(db.gameDao())
 
         // Get the id of the game from the intent
         val id = intent.getIntExtra("gameID", 0)
@@ -68,7 +65,7 @@ class DetailActivity : ComponentActivity() {
 
                 // Start a coroutine to search the game in the database
                 LaunchedEffect(id) {
-                    game = gameDao.selectById(id)
+                    game = repository.selectGame(id)
                 }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

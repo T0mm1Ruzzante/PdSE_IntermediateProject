@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
         Log.d(mTag, "Sto per accedere al database")
         // Get the database instance and the data access object
         val db = AppDatabase.getDatabase(this)
-        val gameDao = db.gameDao()
+        val repository = GameRepository(db.gameDao())
         Log.d(mTag, "Ho l'interfaccia del database")
 
         // Set and display the UI content
@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                         })
                     }
                 ) { innerPadding ->
-                    val gamesList by gameDao.getAll().collectAsState(initial = emptyList())
+                    val gamesList by repository.getAllGames().collectAsState(initial = emptyList())
                     MainScreen(
                         modifier = Modifier
                             .fillMaxSize()
