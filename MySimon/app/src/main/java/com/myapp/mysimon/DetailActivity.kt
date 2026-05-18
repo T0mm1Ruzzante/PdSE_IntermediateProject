@@ -19,8 +19,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -52,7 +52,7 @@ class DetailActivity : ComponentActivity() {
         setContent {
             MySimonTheme {
                 // Define the default value of the game we want to display
-                var game by rememberSaveable { mutableStateOf<Game?>(null) }
+                var game by remember { mutableStateOf<Game?>(null) }
 
                 // Start a coroutine to search the game in the database
                 LaunchedEffect(id) {
@@ -61,13 +61,18 @@ class DetailActivity : ComponentActivity() {
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     // Wait the finish of the coroutine to pass the game to the screen function
-                    game?.let { thisGame ->
+                    val currentGame = game
+                    if (currentGame != null) {
+                        // When the game is ready, display the detail screen
                         DetailScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(innerPadding),
-                            game = thisGame
+                            game = currentGame
                         )
+                    } else {
+                        // While waiting, display a loading screen
+                        Text("Loading...", modifier = Modifier.padding(innerPadding))
                     }
                 }
             }
@@ -111,6 +116,7 @@ fun DetailScreen(modifier: Modifier = Modifier, game: Game) {
             textAlign = TextAlign.Center
         )
 
+        // Display the sequence of this game
         DetailedSequence(
             modifier = Modifier
                 .fillMaxWidth()
@@ -149,7 +155,7 @@ fun DetailedSequence(
     // Value used to make the sequence scrollable and not expandable
     val scrollState = rememberScrollState()
 
-    // Print the sequence of this game
+    // Text with the sequence of this game
     Text(
         text = resultString,
         modifier = modifier

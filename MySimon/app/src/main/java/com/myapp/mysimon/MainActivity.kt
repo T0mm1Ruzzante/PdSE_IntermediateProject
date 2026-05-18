@@ -2,7 +2,6 @@ package com.myapp.mysimon
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -43,19 +42,15 @@ import com.myapp.mysimon.ui.theme.*
 
 class MainActivity : ComponentActivity() {
 
-    private val mTag = this.javaClass.simpleName
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
-        Log.d(mTag, "Sto per accedere al database")
         // Get the database instance and the data access object
         val db = AppDatabase.getDatabase(this)
         val repository = GameRepository(db.gameDao())
-        Log.d(mTag, "Ho l'interfaccia del database")
 
         // Set and display the UI content
         setContent {
@@ -71,14 +66,16 @@ class MainActivity : ComponentActivity() {
                         })
                     }
                 ) { innerPadding ->
+                    // Collect the list of games from the database
                     val gamesList by repository.getAllGames().collectAsState(initial = emptyList())
                     MainScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding),
                         buttonDetailScreen = { game ->
+                            // Pass the game to the detail activity by the id using the bundle of the intent
                             val intent = Intent(this, DetailActivity::class.java).apply {
-                                putExtra("gameID", game.id) // Pass the game to the detail activity by the id
+                                putExtra("gameID", game.id)
                             }
                             startActivity(intent)
                         },
@@ -105,7 +102,7 @@ fun MainScreen(modifier: Modifier = Modifier, buttonDetailScreen : (game: Game) 
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // On top of the layout there is a text with the "title" of the screen
+        // On top of the layout there is a text with the name of the game
         // This text will not scroll up or down with the lazy column
         // The color of the text is changed depending on the current theme of the device
         Text(
@@ -120,6 +117,7 @@ fun MainScreen(modifier: Modifier = Modifier, buttonDetailScreen : (game: Game) 
         )
 
         // Title of the section containing the old games
+        // This text will not scroll and his color change depending on the current theme of the device
         Text(
             text = oldGames,
             modifier = Modifier
