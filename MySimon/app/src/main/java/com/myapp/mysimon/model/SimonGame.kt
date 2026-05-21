@@ -16,14 +16,14 @@ class SimonGame {
     }
 
     // Return the sequence as a string
-    fun getSequenceString() : String {
+    fun getSequenceString(index: Int = count) : String {
         var s = ""
         if (sequence.isEmpty()) {
             return s
         }
         else {
             s = colorsLetters[sequence[0]]
-            for (i in 1 until count) {
+            for (i in 1 until index) {
                 s += ", " + colorsLetters[sequence[i]]
             }
             return s

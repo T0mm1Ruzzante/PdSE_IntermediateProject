@@ -15,11 +15,12 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 enum class GameState {
-    STARTING,
-    CPU_TURN,
-    USER_TURN,
-    GAME_OVER,
-    PAUSE
+    STARTING, // Waiting for the user to start a new game
+    CPU_TURN, // The CPU is generating the sequence
+    USER_TURN, // The user can click on the buttons
+    GAME_OVER, // The game ended due to an error or by the button End Game
+    PAUSE, // The game is paused by the user
+    WAITING // Waiting for the game to change state during the check
 }
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
@@ -62,13 +63,22 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // Set the state to CPU_TURN
             _gameState.value = GameState.CPU_TURN
 
+            // Clear the string every time the user has to repeat the sequence
+            _sequenceString.value = ""
+
             // Generate an int between 0 and 5 and add it to the sequence
             val nextColor = Random.nextInt(0, 6)
             simonGame.increment(nextColor)
-            _sequenceString.value = simonGame.getSequenceString()
 
-            // Show the sequence: every button is illuminated for 800ms and there's a gap of 200ms between buttons
+            // Show the sequence to the user
             for (colorIndex in simonGame.sequence) {
+                // Stop playback if game is paused
+                while (_gameState.value == GameState.PAUSE) {
+                    // Wait 100 ms and then check if the game is resumed, if not repeat the loop
+                    delay(100)
+                }
+
+                // Every button is illuminated for 800ms and there's a gap of 200ms between buttons
                 _activeButtonIndex.value = colorIndex
                 delay(800)
                 _activeButtonIndex.value = -1
@@ -82,8 +92,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Function that handle the user click, the parameter is the index of the button pressed
     fun userClick(btn: Int) {
-        // Check if it's the user turn
-        if (_gameState.value != GameState.USER_TURN) return
+        // Change the game state during the check
+        _gameState.value = GameState.WAITING
 
         viewModelScope.launch {
             // Visual feedback for user click
@@ -91,11 +101,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             delay(200)
             _activeButtonIndex.value = -1
 
-            // Check if the user press the right button
+            // Button the user should have clicked
             val rightColor = simonGame.sequence[userIndex]
+
             if (rightColor == btn) {
                 // The user has guess the right color so we increment his counter
                 userIndex++
+
+                // Update the sequence showed with the last button pressed
+                _sequenceString.value = simonGame.getSequenceString(userIndex)
+
+                // If the button is right and there are one or more other button the user can click again
+                _gameState.value = GameState.USER_TURN
 
                 // Check if the user has completed this round's sequence
                 if (userIndex == simonGame.count) {
@@ -114,8 +131,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun gameOver() {
         _gameState.value = GameState.GAME_OVER
 
+        // If the user hasn't pressed any button do not save the game
+        if (simonGame.count <= 1) return
+
         // Save the values that has to be inserted in the database
-        val game = Game(counter = simonGame.count, sequence = simonGame.getSequenceString(), error = userIndex)
+        val game = Game(counter = simonGame.count, sequence = simonGame.getSequenceString(), error = userIndex+1)
 
         // Launch a coroutine to insert the game in the database safely
         viewModelScope.launch {
@@ -125,8 +145,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Function called when the pause button is clicked by the user
     fun pauseGame() {
-        // The function can be called only during the cpu turn
-        if (_gameState.value != GameState.CPU_TURN) return
         _gameState.value = GameState.PAUSE
     }
 

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,7 +43,6 @@ import com.myapp.mysimon.ui.theme.*
 class GameActivity : ComponentActivity() {
 
     private lateinit var gameViewModel: GameViewModel
-    private val mTag = this.javaClass.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +52,6 @@ class GameActivity : ComponentActivity() {
 
         // Get a new or existing ViewModel from the ViewModelProvider
         gameViewModel = ViewModelProvider(this)[GameViewModel::class.java]
-        Log.d(mTag, "Ho accesso al viewmodel")
 
         // Set and display the UI content
         setContent {
@@ -110,9 +109,6 @@ fun GameScreen(
     // Orientation of the device
     val orientation = LocalConfiguration.current.orientation
 
-    // Default string that appears in the text box before a game is started
-    val newSequence = stringResource(R.string.new_sequence)
-
     // Layout of the game activity
     if (orientation == Configuration.ORIENTATION_PORTRAIT) {
         // Layout for the portrait mode
@@ -126,7 +122,7 @@ fun GameScreen(
             // On top the button grid cover 4/7 of the total space
             ButtonGrid(
                 modifier = Modifier
-                    .weight(4f),
+                    .weight(0.7f),
                 gameState = gameState,
                 activeButtonIndex = activeButtonIndex,
                 onButtonClick = onColoredButtonClick
@@ -135,15 +131,16 @@ fun GameScreen(
             // Under the grid there is the box with the current sequence, it cover 2/7 of the total space
             SequenceText(
                 modifier = Modifier
-                    .weight(2f),
-                sequence = if (gameState == GameState.STARTING) newSequence else text
+                    .weight(0.2f),
+                sequence = text,
+                gameState = gameState
             )
 
             // On the bottom there is a row with the three game buttons, covering the last 1/7 of space
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(0.1f),
             ) {
                 StartButton(
                     modifier = Modifier
@@ -198,7 +195,8 @@ fun GameScreen(
                 SequenceText(
                     modifier = Modifier
                         .weight(2f),
-                    sequence = if (gameState == GameState.STARTING) newSequence else text
+                    sequence = text,
+                    gameState = gameState
                 )
 
                 // Under the sequence there are the three button
@@ -264,9 +262,6 @@ fun ButtonGrid(
                     // Illuminates the button if it is the one indicated
                     val isButtonActive = (i == activeButtonIndex)
 
-                    // Check if it's the user turn
-                    val isUserTurn = (gameState == GameState.USER_TURN)
-
                     // The button is darker (at 40%) if the button is inactive
                     val buttonColors = if (isButtonActive) colors[i] else colors[i].copy(alpha = 0.4f)
 
@@ -277,7 +272,7 @@ fun ButtonGrid(
                         onClick = {
                             onButtonClick(i)
                         },
-                        enabled = isUserTurn,
+                        enabled = gameState == GameState.USER_TURN,
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = buttonColors,
@@ -296,10 +291,16 @@ fun ButtonGrid(
 @Composable
 fun SequenceText(
     modifier: Modifier = Modifier,
-    sequence: String
+    sequence: String,
+    gameState: GameState
 ) {
     // Value used to make the sequence scrollable and not expandable
     val scrollState = rememberScrollState()
+
+    // Default string that appears in the text box before a game is started
+    val newSequence = stringResource(R.string.new_sequence)
+    // String that appears in the box test when the user click the wrong button
+    val error = stringResource(R.string.error)
 
     // Gradient border color for the text box
     val gradientBrush = Brush.horizontalGradient(
@@ -311,7 +312,11 @@ fun SequenceText(
 
     // Text view with the string of the current game
     Text(
-        text = sequence,
+        text = when (gameState) {
+            GameState.STARTING -> newSequence
+            GameState.GAME_OVER -> error
+            else -> sequence
+        },
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
@@ -320,7 +325,8 @@ fun SequenceText(
             .border(width = 1.dp, brush = gradientBrush, shape = RoundedCornerShape(4.dp)),
         color = Color.Black,
         fontSize = 18.sp,
-        fontWeight = FontWeight.Medium
+        fontWeight = FontWeight.Medium,
+        textAlign = TextAlign.Center
     )
 }
 
@@ -338,20 +344,22 @@ fun StartButton(
     // Button to start a new game
     Button(
         modifier = modifier
-            .padding(8.dp),
+            .padding(4.dp),
         onClick = onButtonClick,
         enabled = gameState == GameState.STARTING,
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
     ) {
         Text(
             text = start,
-            fontSize = 16.sp
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
         )
     }
 }
 
 // Composable function that define the button Pause, used to pause the sequence the app is generating
 // In the parameters is passed the function called when the button is clicked
+// The game can be paused only when
 @Composable
 fun PauseButton(
     modifier: Modifier = Modifier,
@@ -365,7 +373,7 @@ fun PauseButton(
     // Button to pause the current game
     Button(
         modifier = modifier
-            .padding(8.dp),
+            .padding(4.dp),
         onClick = onButtonClick,
         enabled = (gameState == GameState.CPU_TURN) || (gameState == GameState.PAUSE),
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
@@ -373,7 +381,8 @@ fun PauseButton(
         Text(
             // The text change depending on the state of the game
             text = if (gameState == GameState.PAUSE) resume else pause,
-            fontSize = 16.sp
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -392,14 +401,17 @@ fun EndgameButton(
     // Button to end the current game
     Button(
         modifier = modifier
-            .padding(8.dp),
+            .padding(4.dp),
         onClick = onButtonClick,
-        enabled = gameState != GameState.STARTING,
+        enabled = (gameState == GameState.USER_TURN) ||
+                  (gameState == GameState.CPU_TURN) ||
+                  (gameState == GameState.PAUSE),
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
     ) {
         Text(
             text = endgame,
-            fontSize = 16.sp
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -408,7 +420,7 @@ fun EndgameButton(
 @Composable
 fun GameScreenPreview() {
     GameScreen(
-        gameState = GameState.STARTING,
+        gameState = GameState.USER_TURN,
         text = "R, G, B, Y, M, R, B, B",
         activeButtonIndex = 2,
         onColoredButtonClick = {},
