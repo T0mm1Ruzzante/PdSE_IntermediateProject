@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -263,7 +264,7 @@ fun ButtonGrid(
                     val isButtonActive = (i == activeButtonIndex)
 
                     // The button is darker (at 40%) if the button is inactive
-                    val buttonColors = if (isButtonActive) colors[i] else colors[i].copy(alpha = 0.4f)
+                    val buttonColors = if (isButtonActive) colors[i] else colors[i].copy(alpha = 0.3f)
 
                     Button(
                         modifier = Modifier
@@ -274,6 +275,7 @@ fun ButtonGrid(
                         },
                         enabled = gameState == GameState.USER_TURN,
                         shape = RoundedCornerShape(4.dp),
+                        border = BorderStroke(2.dp, Color.Black),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = buttonColors,
                             disabledContainerColor = buttonColors

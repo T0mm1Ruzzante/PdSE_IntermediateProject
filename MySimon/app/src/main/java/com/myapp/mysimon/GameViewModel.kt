@@ -92,6 +92,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Function that handle the user click, the parameter is the index of the button pressed
     fun userClick(btn: Int) {
+        // Check if the user can actually click a button
+        if (_gameState.value != GameState.USER_TURN || userIndex >= simonGame.count) return
+
         // Change the game state during the check
         _gameState.value = GameState.WAITING
 
@@ -111,14 +114,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 // Update the sequence showed with the last button pressed
                 _sequenceString.value = simonGame.getSequenceString(userIndex)
 
-                // If the button is right and there are one or more other button the user can click again
-                _gameState.value = GameState.USER_TURN
-
                 // Check if the user has completed this round's sequence
                 if (userIndex == simonGame.count) {
                     userIndex = 0
                     delay(500)
                     addNewColor()
+                } else {
+                    // If there are one or more other button the user can click again
+                    _gameState.value = GameState.USER_TURN
                 }
             } else {
                 // The user has guess the wrong button, so the game end
@@ -135,7 +138,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (simonGame.count <= 1) return
 
         // Save the values that has to be inserted in the database
-        val game = Game(counter = simonGame.count, sequence = simonGame.getSequenceString(), error = userIndex+1)
+        val game = Game(counter = simonGame.count-1, sequence = simonGame.getSequenceString(), error = userIndex+1)
 
         // Launch a coroutine to insert the game in the database safely
         viewModelScope.launch {
