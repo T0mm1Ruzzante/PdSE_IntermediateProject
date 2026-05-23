@@ -2,8 +2,8 @@ package com.myapp.mysimon
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
@@ -60,6 +60,14 @@ class GameActivity : ComponentActivity() {
             val gameState by gameViewModel.gameState.collectAsState()
             val text by gameViewModel.sequenceString.collectAsState()
             val activeButtonIndex by gameViewModel.activeButtonIndex.collectAsState()
+
+            // Handle the saving of the game when the user press the back button during a game
+            BackHandler(
+                enabled = (gameState != GameState.STARTING) && (gameState != GameState.GAME_OVER)
+            ) {
+                gameViewModel.endGame()
+                this.finish()
+            }
 
             MySimonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

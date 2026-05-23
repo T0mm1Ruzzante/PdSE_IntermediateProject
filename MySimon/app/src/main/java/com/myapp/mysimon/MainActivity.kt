@@ -214,7 +214,7 @@ fun PreviousGames(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 4
+                    maxLines = 2
                 )
             }
         }

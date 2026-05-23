@@ -2,6 +2,7 @@ package com.myapp.mysimon
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.myapp.mysimon.data.AppDatabase
 import com.myapp.mysimon.data.Game
@@ -23,19 +24,22 @@ enum class GameState {
     WAITING // Waiting for the game to change state during the check
 }
 
-class GameViewModel(application: Application) : AndroidViewModel(application) {
+class GameViewModel(
+    application: Application,
+    private val savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
     // Instance of the repository
     private val repository: GameRepository
-    init {
-        val db = AppDatabase.getDatabase(application)
-        repository = GameRepository(db.gameDao())
-    }
 
     // Instance of the current SimonGame
     private val simonGame = SimonGame()
 
-    // Last button pressed by the user
+    // Number of the last button pressed by the user (synchronized with the savedStateHandle)
     private var userIndex = 0
+        set(value) {
+            field = value
+            savedStateHandle["user_index"] = value
+        }
 
     // Observable state of the game
     private val _gameState = MutableStateFlow(GameState.STARTING)
@@ -49,11 +53,80 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeButtonIndex = MutableStateFlow(-1)
     val activeButtonIndex: StateFlow<Int> = _activeButtonIndex.asStateFlow()
 
+    init {
+        // Initialize the repository that the view model will use
+        val db = AppDatabase.getDatabase(application)
+        repository = GameRepository(db.gameDao())
+
+        // Retrieves the game sequence and rebuilds the simonGame object
+        val savedSequence = savedStateHandle.get<ArrayList<Int>>("sequence")
+        savedSequence?.forEach { color ->
+            simonGame.sequence.add(color)
+            simonGame.count++
+        }
+
+        // Retrieves the index of the last button pressed by the user
+        userIndex = savedStateHandle.get<Int>("user_index") ?: 0
+
+        // Retrieves the current state of the game as a string
+        val savedStateName = savedStateHandle.get<String>("game_state")
+        if (savedStateName != null) {
+            // Get the state of the game from the string
+            val restoredState = GameState.valueOf(savedStateName)
+
+            // Restore the state of the game
+            _gameState.value = restoredState
+            // Reconstruct display string if the user was mid-turn
+            _sequenceString.value = simonGame.getSequenceString(userIndex)
+
+            // Handle non static situation (the cpu was showing the sequence or the user was playing)
+            if (restoredState == GameState.CPU_TURN || restoredState == GameState.USER_TURN) {
+                // Restart by re-showing the current sequence to the user to remind them of the flow
+                replayCurrentSequence()
+            }
+        }
+    }
+
+    // Utility function to update the game state
+    private fun updateGameState(newState: GameState) {
+        _gameState.value = newState
+        savedStateHandle["game_state"] = newState.name
+    }
+
+    // Utility function used to show one more time the current sequence to the user
+    private fun replayCurrentSequence() {
+        viewModelScope.launch {
+            // Set the state to CPU_TURN and hide the sequence during playback
+            updateGameState(GameState.CPU_TURN)
+            _sequenceString.value = ""
+
+            for (colorIndex in simonGame.sequence) {
+                // Stop playback if game is paused
+                while (_gameState.value == GameState.PAUSE) {
+                    // Wait 100 ms and then check if the game is resumed, if not repeat the loop
+                    delay(100)
+                }
+
+                // Every button is illuminated for 800ms and there's a gap of 200ms between buttons
+                _activeButtonIndex.value = colorIndex
+                delay(800)
+                _activeButtonIndex.value = -1
+                delay(200)
+            }
+
+            // Pass the game state to the user
+            updateGameState(GameState.USER_TURN)
+            // Restore the progress string (what the user already matched)
+            _sequenceString.value = simonGame.getSequenceString(userIndex)
+        }
+    }
+
     // Function to start a new game
     fun startNewGame() {
         simonGame.reset() // Make sure the game is cleared
+        savedStateHandle["sequence"] = ArrayList<Int>()
         userIndex = 0
-        _gameState.value = GameState.CPU_TURN
+        updateGameState(GameState.CPU_TURN)
         addNewColor()
     }
 
@@ -61,7 +134,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun addNewColor() {
         viewModelScope.launch {
             // Set the state to CPU_TURN
-            _gameState.value = GameState.CPU_TURN
+            updateGameState(GameState.CPU_TURN)
 
             // Clear the string every time the user has to repeat the sequence
             _sequenceString.value = ""
@@ -69,6 +142,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // Generate an int between 0 and 5 and add it to the sequence
             val nextColor = Random.nextInt(0, 6)
             simonGame.increment(nextColor)
+            savedStateHandle["sequence"] = ArrayList(simonGame.sequence)
 
             // Show the sequence to the user
             for (colorIndex in simonGame.sequence) {
@@ -86,7 +160,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             // Pass the game state to the user
-            _gameState.value = GameState.USER_TURN
+            updateGameState(GameState.USER_TURN)
+            // Ensure the display shows current progress (empty at start of turn)
+            _sequenceString.value = simonGame.getSequenceString(userIndex)
         }
     }
 
@@ -96,7 +172,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (_gameState.value != GameState.USER_TURN || userIndex >= simonGame.count) return
 
         // Change the game state during the check
-        _gameState.value = GameState.WAITING
+        updateGameState(GameState.WAITING)
 
         viewModelScope.launch {
             // Visual feedback for user click
@@ -105,12 +181,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _activeButtonIndex.value = -1
 
             // Button the user should have clicked
-            val rightColor = simonGame.sequence[userIndex]
+            // The user has pressed a button so the index is incremented
+            val rightColor = simonGame.sequence[userIndex++]
 
             if (rightColor == btn) {
-                // The user has guess the right color so we increment his counter
-                userIndex++
-
                 // Update the sequence showed with the last button pressed
                 _sequenceString.value = simonGame.getSequenceString(userIndex)
 
@@ -121,7 +195,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     addNewColor()
                 } else {
                     // If there are one or more other button the user can click again
-                    _gameState.value = GameState.USER_TURN
+                    updateGameState(GameState.USER_TURN)
                 }
             } else {
                 // The user has guess the wrong button, so the game end
@@ -132,13 +206,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Function that handle the end of the game
     fun gameOver() {
-        _gameState.value = GameState.GAME_OVER
+        updateGameState(GameState.GAME_OVER)
 
         // If the user hasn't pressed any button do not save the game
-        if (simonGame.count <= 1) return
+        if (simonGame.count <= 1 && userIndex == 0) return
 
-        // Save the values that has to be inserted in the database
-        val game = Game(counter = simonGame.count-1, sequence = simonGame.getSequenceString(), error = userIndex+1)
+        val game = Game(
+            counter = simonGame.count - 1,
+            sequence = simonGame.getSequenceString(),
+            error = userIndex
+        )
 
         // Launch a coroutine to insert the game in the database safely
         viewModelScope.launch {
@@ -148,15 +225,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Function called when the pause button is clicked by the user
     fun pauseGame() {
-        _gameState.value = GameState.PAUSE
+        updateGameState(GameState.PAUSE)
     }
 
     // Function used to return to the cpu turn
     fun resumeGame() {
-        _gameState.value = GameState.CPU_TURN
+        updateGameState(GameState.CPU_TURN)
     }
 
-    // Function called when the endgame button is clicked by the user
+    // Function called when the user end the game with the endgame button or with the system back button
     fun endGame() {
         gameOver()
     }

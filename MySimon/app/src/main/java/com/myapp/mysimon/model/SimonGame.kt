@@ -18,11 +18,14 @@ class SimonGame {
     // Return the sequence as a string
     fun getSequenceString(index: Int = count) : String {
         var s = ""
-        if (sequence.isEmpty()) {
+        // If the sequence is empty or the index is 0, return an empty string
+        if (sequence.isEmpty() || index <= 0) {
             return s
         }
         else {
+            // Add the first color to the string
             s = colorsLetters[sequence[0]]
+            // Add the rest of the colors to the string, spaced by a comma
             for (i in 1 until index) {
                 s += ", " + colorsLetters[sequence[i]]
             }
