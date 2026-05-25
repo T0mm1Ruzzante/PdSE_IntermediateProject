@@ -22,15 +22,14 @@ class SimonGame {
         if (sequence.isEmpty() || index <= 0) {
             return s
         }
-        else {
-            // Add the first color to the string
-            s = colorsLetters[sequence[0]]
-            // Add the rest of the colors to the string, spaced by a comma
-            for (i in 1 until index) {
-                s += ", " + colorsLetters[sequence[i]]
-            }
-            return s
+        
+        // Add the first color to the string
+        s = colorsLetters[sequence[0]]
+        // Add the rest of the colors to the string, spaced by a comma
+        for (i in 1 until index) {
+            s += ", " + colorsLetters[sequence[i]]
         }
+        return s
     }
 
     // Reset to empty/0 the values of this game

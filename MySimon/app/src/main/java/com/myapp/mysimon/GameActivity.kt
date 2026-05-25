@@ -24,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,11 +40,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
+import com.myapp.mysimon.audio.GameAudioManager
 import com.myapp.mysimon.ui.theme.*
 
 class GameActivity : ComponentActivity() {
 
+    // Instance of the view model, will be initialized later
     private lateinit var gameViewModel: GameViewModel
+
+    // Instance of the audio manager, will be initialized later
+    private lateinit var gameAudioManager: GameAudioManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,12 +60,28 @@ class GameActivity : ComponentActivity() {
         // Get a new or existing ViewModel from the ViewModelProvider
         gameViewModel = ViewModelProvider(this)[GameViewModel::class.java]
 
+        gameAudioManager = GameAudioManager(this)
+
         // Set and display the UI content
         setContent {
             // Collect the actual state of the game
             val gameState by gameViewModel.gameState.collectAsState()
             val text by gameViewModel.sequenceString.collectAsState()
             val activeButtonIndex by gameViewModel.activeButtonIndex.collectAsState()
+
+            // Audio feedback for the user when he pressed a colored button
+            LaunchedEffect(activeButtonIndex) {
+                if (activeButtonIndex != -1) {
+                    gameAudioManager.playSound(activeButtonIndex)
+                }
+            }
+
+            // Audio feedback when the game end
+            LaunchedEffect(gameState) {
+                if (gameState == GameState.GAME_OVER) {
+                    gameAudioManager.playSound(99)
+                }
+            }
 
             // Handle the saving of the game when the user press the back button during a game
             BackHandler(
@@ -98,6 +120,14 @@ class GameActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        if (this::gameAudioManager.isInitialized) {
+            gameAudioManager.release()
         }
     }
 }
