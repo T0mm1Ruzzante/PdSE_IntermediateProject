@@ -1,12 +1,15 @@
 package com.myapp.mysimon.model
 
+// Class used to manage the game logic
+// An instance of this class represent a game
 class SimonGame {
-    // List of the colors of the buttons
+    // List of the colors of the buttons translated into strings
     private val colorsLetters = listOf("R", "M", "G", "Y", "B", "C")
 
     // The list contain Int with value between 0 and 5, each number representing a color
     val sequence: MutableList<Int> = mutableListOf()
-    // The length of the sequence
+
+    // The length of the sequence, representing how many buttons has been clicked
     var count: Int = 0
 
     // Add a color to the sequence

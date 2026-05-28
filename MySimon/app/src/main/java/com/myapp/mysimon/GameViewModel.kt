@@ -15,15 +15,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+// Enumeration of the state of the game
 enum class GameState {
     STARTING, // Waiting for the user to start a new game
     CPU_TURN, // The CPU is generating the sequence
-    USER_TURN, // The user can click on the buttons
-    GAME_OVER, // The game ended due to an error or by the button End Game
     PAUSE, // The game is paused by the user
-    WAITING // Waiting for the game to change state during the check
+    USER_TURN, // The user can click on the buttons
+    WAITING, // Waiting for the game to change state during the check
+    GAME_OVER // The game ended due to an error or by the button End Game
 }
 
+// View model of the game
 class GameViewModel(
     application: Application,
     private val savedStateHandle: SavedStateHandle
@@ -34,7 +36,8 @@ class GameViewModel(
     // Instance of the current SimonGame
     private val simonGame = SimonGame()
 
-    // Number of the last button pressed by the user (synchronized with the savedStateHandle)
+    // Number of buttons pressed by the user yet (synchronized with the savedStateHandle)
+    // Used as an index of the sequence
     private var userIndex = 0
         set(value) {
             field = value
@@ -208,9 +211,7 @@ class GameViewModel(
     fun gameOver() {
         updateGameState(GameState.GAME_OVER)
 
-        // If the user hasn't pressed any button do not save the game
-        if (simonGame.count <= 1 && userIndex == 0) return
-
+        // Values of the game that has to be saved
         val game = Game(
             counter = simonGame.count - 1,
             sequence = simonGame.getSequenceString(),
@@ -235,6 +236,11 @@ class GameViewModel(
 
     // Function called when the user end the game with the endgame button or with the system back button
     fun endGame() {
+        // If the user hasn't pressed any button do not save the game
+        if (simonGame.count <= 1 && userIndex == 0) return
+
+        // Increment the number of buttons pressed by the user, because the error is the button never pressed
+        userIndex++
         gameOver()
     }
 }

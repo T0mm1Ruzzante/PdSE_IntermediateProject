@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
+// Data Access Object (DAO) for the Game entity
 @Dao
 interface GameDao {
     @Insert

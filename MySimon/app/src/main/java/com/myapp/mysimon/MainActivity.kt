@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
-        // Get the database instance and the data access object
+        // Initialize the database and the repository to access the database
         val db = AppDatabase.getDatabase(this)
         val repository = GameRepository(db.gameDao())
 
@@ -57,8 +57,8 @@ class MainActivity : ComponentActivity() {
             MySimonTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    // Insert the floating action button and by default put it in the bottom right corner
                     floatingActionButton = {
+                        // Insert the floating action button and by default put it in the bottom right corner
                         FabNewGame(onButtonClick = {
                             // The button start the new game activity
                             val intent = Intent(this, GameActivity::class.java)
@@ -88,11 +88,15 @@ class MainActivity : ComponentActivity() {
 }
 
 // Function of the first screen of the app
-// Contain the sequences of the previous games and how many times buttons were clicked in each sequence
+// Contain the sequences of the previous games and the best score of each sequence (consecutive button pressed correctly)
 // From this screen you can open the game activity or access the details of a sequence
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, buttonDetailScreen : (game: Game) -> Unit, games: List<Game>) {
-    // String used on this activity
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    buttonDetailScreen : (game: Game) -> Unit, // Button function used pass to the detail activity of a specific game
+    games: List<Game> // List of the games
+) {
+    // Strings used on this activity
     val title = stringResource(R.string.game_title)
     val oldGames = stringResource(R.string.old_games)
 
@@ -147,6 +151,7 @@ fun FabNewGame(onButtonClick: () -> Unit) {
     val newGame = stringResource(R.string.new_game)
 
     // Implementation of the button
+    // This button is "extended", so it contains an icon and a text
     ExtendedFloatingActionButton(
         onClick = onButtonClick,
         icon = { Icon(Icons.Filled.PlayArrow, newGame) },
@@ -206,7 +211,7 @@ fun PreviousGames(
                 }
 
                 // Sequence of that game
-                // The sequence is cut to 4 lines to fit the screen
+                // The sequence is cut to 2 lines to fit the screen
                 Text(
                     text = resultString,
                     modifier = Modifier.weight(9f),

@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.SoundPool
 import com.myapp.mysimon.R
 
+// Class used to manage the audio of the game (feedback to the user for buttons pressed and errors)
 class GameAudioManager(context: Context) {
     // Instance of the SoundPool
     private val soundPool: SoundPool
@@ -17,7 +18,6 @@ class GameAudioManager(context: Context) {
         // Define the audio attributes optimized for game sounds
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
 
@@ -36,7 +36,7 @@ class GameAudioManager(context: Context) {
         soundMap[5] = soundPool.load(context, R.raw.color_5, 1)
         soundMap[99] = soundPool.load(context, R.raw.error, 1)
 
-        // Sets the callback hook for the OnLoadCompleteListener (status)
+        // Listener used to know when the sound is loaded
         soundPool.setOnLoadCompleteListener { _, _, status ->
             // If the status is 0, the sound is loaded correctly
             if (status == 0) {

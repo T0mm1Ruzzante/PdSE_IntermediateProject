@@ -60,6 +60,7 @@ class GameActivity : ComponentActivity() {
         // Get a new or existing ViewModel from the ViewModelProvider
         gameViewModel = ViewModelProvider(this)[GameViewModel::class.java]
 
+        // Initialize the audio manager
         gameAudioManager = GameAudioManager(this)
 
         // Set and display the UI content
@@ -123,6 +124,7 @@ class GameActivity : ComponentActivity() {
         }
     }
 
+    // The override of onDestroy() is important to avoid memory leaks by releasing the audio manager
     override fun onDestroy() {
         super.onDestroy()
 
@@ -158,7 +160,7 @@ fun GameScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // On top the button grid cover 4/7 of the total space
+            // On top the button grid cover 70% of the total space
             ButtonGrid(
                 modifier = Modifier
                     .weight(0.7f),
@@ -167,7 +169,7 @@ fun GameScreen(
                 onButtonClick = onColoredButtonClick
             )
 
-            // Under the grid there is the box with the current sequence, it cover 2/7 of the total space
+            // Under the grid there is the box with the current sequence, it cover 20% of the total space
             SequenceText(
                 modifier = Modifier
                     .weight(0.2f),
@@ -175,12 +177,13 @@ fun GameScreen(
                 gameState = gameState
             )
 
-            // On the bottom there is a row with the three game buttons, covering the last 1/7 of space
+            // On the bottom there is a row with the three game buttons, covering the last 10% of space
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(0.1f),
             ) {
+                // Each button has the same size
                 StartButton(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -301,7 +304,7 @@ fun ButtonGrid(
                     // Illuminates the button if it is the one indicated
                     val isButtonActive = (i == activeButtonIndex)
 
-                    // The button is darker (at 40%) if the button is inactive
+                    // The button is darker (at 30%) if the button is inactive
                     val buttonColors = if (isButtonActive) colors[i] else colors[i].copy(alpha = 0.3f)
 
                     Button(
@@ -327,6 +330,7 @@ fun ButtonGrid(
 }
 
 // Composable function that display the sequence of the current game
+// The box is used even to display messages to the user, depending on the game state
 // If the sequence is too long for its box, it will be scrollable
 @Composable
 fun SequenceText(
@@ -399,7 +403,7 @@ fun StartButton(
 
 // Composable function that define the button Pause, used to pause the sequence the app is generating
 // In the parameters is passed the function called when the button is clicked
-// The game can be paused only when
+// The game can be paused only when the cpu is generating the sequence
 @Composable
 fun PauseButton(
     modifier: Modifier = Modifier,
@@ -415,7 +419,8 @@ fun PauseButton(
         modifier = modifier
             .padding(4.dp),
         onClick = onButtonClick,
-        enabled = (gameState == GameState.CPU_TURN) || (gameState == GameState.PAUSE),
+        enabled = (gameState == GameState.CPU_TURN) ||
+                  (gameState == GameState.PAUSE),
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
     ) {
         Text(

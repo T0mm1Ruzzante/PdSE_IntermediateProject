@@ -41,7 +41,7 @@ class DetailActivity : ComponentActivity() {
         // Enable edge-to-edge display on API level < 35
         enableEdgeToEdge()
 
-        // Get the database instance and the data access object
+        // Initialize the database and the repository to access the database
         val db = AppDatabase.getDatabase(this)
         val repository = GameRepository(db.gameDao())
 
@@ -81,9 +81,12 @@ class DetailActivity : ComponentActivity() {
 }
 
 // Function of the detail screen of the app
-// Contain details about a sequence
+// Contain the full sequence of the game and the maximum number of consecutive correct clicks
 @Composable
-fun DetailScreen(modifier: Modifier = Modifier, game: Game) {
+fun DetailScreen(
+    modifier: Modifier = Modifier,
+    game: Game // The game we want to display
+) {
     // String used on this activity
     val details = stringResource(R.string.game_details)
 
@@ -91,8 +94,8 @@ fun DetailScreen(modifier: Modifier = Modifier, game: Game) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally)
-    {
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         // Title of the page
         Text(
             text = details,
@@ -105,7 +108,7 @@ fun DetailScreen(modifier: Modifier = Modifier, game: Game) {
             textAlign = TextAlign.Center
         )
 
-        // Number of current clicks in this game
+        // Text with the score of this game
         Text(
             text = game.counter.toString(),
             modifier = Modifier

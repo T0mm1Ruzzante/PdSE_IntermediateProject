@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.Room
 
+// Database class for the application
 @Database(entities = arrayOf(Game::class), version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
