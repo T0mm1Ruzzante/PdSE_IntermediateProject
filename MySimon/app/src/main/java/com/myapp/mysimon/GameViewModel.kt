@@ -110,9 +110,9 @@ class GameViewModel(
                     delay(100)
                 }
 
-                // Every button is illuminated for 800ms and there's a gap of 200ms between buttons
+                // Every button is illuminated for 600ms and there's a gap of 200ms between buttons
                 _activeButtonIndex.value = colorIndex
-                delay(800)
+                delay(600)
                 _activeButtonIndex.value = -1
                 delay(200)
             }
@@ -155,9 +155,9 @@ class GameViewModel(
                     delay(100)
                 }
 
-                // Every button is illuminated for 800ms and there's a gap of 200ms between buttons
+                // Every button is illuminated for 600ms and there's a gap of 200ms between buttons
                 _activeButtonIndex.value = colorIndex
-                delay(800)
+                delay(600)
                 _activeButtonIndex.value = -1
                 delay(200)
             }
@@ -180,7 +180,7 @@ class GameViewModel(
         viewModelScope.launch {
             // Visual feedback for user click
             _activeButtonIndex.value = btn
-            delay(200)
+            delay(100)
             _activeButtonIndex.value = -1
 
             // Button the user should have clicked

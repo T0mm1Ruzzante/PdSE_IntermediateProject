@@ -419,8 +419,7 @@ fun PauseButton(
         modifier = modifier
             .padding(4.dp),
         onClick = onButtonClick,
-        enabled = (gameState == GameState.CPU_TURN) ||
-                  (gameState == GameState.PAUSE),
+        enabled = (gameState == GameState.CPU_TURN) || (gameState == GameState.PAUSE),
         colors = ButtonDefaults.buttonColors(containerColor = OrangeA400)
     ) {
         Text(
